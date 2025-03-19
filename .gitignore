@@ -1,13 +1,16 @@
 # Ignore virtual environment
 venv/
 
-# Ignore Python cache
-__pycache__/
-*.pyc
-*.pyo
-
 # Ignore database files
 *.sqlite3
 
-# Ignore environment variables
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore compiled files
+__pycache__/
+
+# Ignore environment variables and sensitive files
+src/job_scraper/settings.py
 .env
