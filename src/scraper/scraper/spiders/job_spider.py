@@ -1,23 +1,44 @@
 import scrapy
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from scrapy.http import HtmlResponse
 
-class JobSpider(scrapy.spiders.SitemapSpider):
+class JobSpider(scrapy.Spider):
     name = "job_spider"
     allowed_domains = ["remoteok.com"]
+    start_urls = ["https://remoteok.com/remote-jobs"]
 
-    # RemoteOK's main sitemap file
-    sitemap_urls = ["https://remoteok.com/sitemap.xml"]
+    def start_requests(self):
+        # Setup Selenium with ChromeDriver
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Run in headless mode (no UI)
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--window-size=1920x1080")
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-    # Extract only job listing pages
-    sitemap_rules = [
-        (r"/remote-jobs/", "parse_job"),
-    ]
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+        driver.get(self.start_urls[0])  # Open RemoteOK job page
+
+        time.sleep(3)  # Wait for Cloudflare check to complete
+
+        # Get page source and pass it to Scrapy
+        scrapy_response = HtmlResponse(url=self.start_urls[0], body=driver.page_source, encoding="utf-8")
+        driver.quit()  # Close Selenium browser
+
+        yield from self.parse(scrapy_response)  # Send to Scrapy parser
 
     def parse(self, response):
-        for job in response.css("tr.job"):  # Select job listings
-            job_url = response.urljoin(job.css("a[itemprop='url']::attr(href)").get())  # Get job URL
-            
-            yield response.follow(job_url, callback=self.parse_job)  # Follow job link to scrape full details
-
+        self.logger.info(f"Accessing page: {response.url}")
+        for job in response.css("tr.job"):
+            job_url = response.urljoin(job.css("a[itemprop='url']::attr(href)").get())
+            self.logger.info(f"Found job URL: {job_url}")
+            yield response.follow(job_url, callback=self.parse_job)
 
     def parse_job(self, response):
         yield {
@@ -27,4 +48,3 @@ class JobSpider(scrapy.spiders.SitemapSpider):
             "description": response.css("div.markdown::text").get(),
             "url": response.url,
         }
-
