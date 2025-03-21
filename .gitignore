@@ -12,5 +12,7 @@ venv/
 __pycache__/
 
 # Ignore environment variables and sensitive files
-src/job_scraper/settings.py
 .env
+
+# Ignore json files
+*.json

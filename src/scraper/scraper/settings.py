@@ -7,7 +7,7 @@ NEWSPIDER_MODULE = "scraper.spiders"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = False
+ROBOTSTXT_OBEY = True
 
 # Stop after scraping 10 jobs
 CLOSESPIDER_ITEMCOUNT = 10
@@ -30,6 +30,10 @@ DEFAULT_REQUEST_HEADERS = {
     "Accept-Language": "en-US,en;q=0.5",
     "Referer": "https://weworkremotely.com",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
+ITEM_PIPELINES = {
+    "scraper.pipelines.PostgreSQLPipeline": 300,  # Activate pipeline
 }
 
 
