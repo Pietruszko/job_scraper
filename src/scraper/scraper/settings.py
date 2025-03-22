@@ -1,3 +1,12 @@
+import sys
+import os
+
+DJANGO_PROJECT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../api"))
+sys.path.append(DJANGO_PROJECT_PATH)
+os.environ["DJANGO_SETTINGS_MODULE"] = "api.settings"
+import django
+django.setup()
+
 BOT_NAME = "scraper"
 
 SPIDER_MODULES = ["scraper.spiders"]
@@ -20,8 +29,6 @@ AUTOTHROTTLE_ENABLED = False
 
 # No need for DOWNLOAD_DELAY (Selenium handles waiting)
 DOWNLOAD_DELAY = 0
-
-
 
 # Enable cookies if needed
 # COOKIES_ENABLED = True
