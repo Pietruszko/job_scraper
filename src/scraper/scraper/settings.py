@@ -7,7 +7,7 @@ NEWSPIDER_MODULE = "scraper.spiders"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Stop after scraping 10 jobs
 CLOSESPIDER_ITEMCOUNT = 10
@@ -20,6 +20,8 @@ AUTOTHROTTLE_ENABLED = False
 
 # No need for DOWNLOAD_DELAY (Selenium handles waiting)
 DOWNLOAD_DELAY = 0
+
+
 
 # Enable cookies if needed
 # COOKIES_ENABLED = True
