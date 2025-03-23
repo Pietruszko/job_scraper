@@ -38,6 +38,6 @@ class WeWorkRemotelySpider(scrapy.Spider):
             "salary": salary,
             "region": region,
             "description": description,
-            "posted_date": posted_date_raw,
+            "posted_date": posted_date,
             "url": response.url,
         }

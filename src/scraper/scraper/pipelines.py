@@ -21,16 +21,17 @@ class PostgreSQLPipeline:
         """Save job listing to PostgreSQL"""
         try:
             self.cursor.execute("""
-                INSERT INTO jobs_job (title, company, salary, region, description, url)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO jobs_job (title, company, salary, region, description, url, posted_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)  
                 ON CONFLICT (url) DO NOTHING;
-            """, (item["title"], item["company"], item["salary"], item["region"], item["description"], item["url"]))
-            
+            """, (item["title"], item["company"], item["salary"], item["region"], item["description"], item["url"], item["posted_date"]))
+        
             self.conn.commit()
             return item
         except Exception as e:
             spider.logger.error(f"Database Error: {e}")
             raise DropItem(f"Error inserting item: {e}")
+
 
     def close_spider(self, spider):
         """Close database connection when Scrapy finishes"""

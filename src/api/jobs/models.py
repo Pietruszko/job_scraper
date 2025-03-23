@@ -9,7 +9,7 @@ class Job(models.Model):
     region = models.CharField(max_length=255, null=True, blank=True)  # Renamed from 'location'
     description = models.TextField(null=True, blank=True)  # Description might be missing
     url = models.URLField(unique=True, null=True, blank=True)  # Allow NULL for existing jobs and ensure no duplicate job postings
-    posted_date = models.TextField(null=True, blank=True)  # Date when job was posted
+    posted_date = models.CharField(max_length=50, null=True, blank=True)  # Date when job was posted
 
     def __str__(self):
         return self.title
