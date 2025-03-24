@@ -17,12 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from jobs.views import JobViewSet
+from jobs.views import JobViewSet, job_list_view
 
 router = DefaultRouter()
 router.register(r'jobs', JobViewSet)
 
 urlpatterns = [
+    path("list/", job_list_view, name="job_list"),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
 ]

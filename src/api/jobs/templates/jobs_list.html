@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Listings</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.prod.js"></script>
+    <style>
+        /* Base Styles */
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        
+        .search-container {
+          margin: 20px 0;
+        }
+        
+        input[type="text"] {
+          width: 100%;
+          padding: 10px;
+          font-size: 16px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+        }
+        
+        /* Job Card Styles */
+        .job-list {
+          display: grid;
+          gap: 20px;
+        }
+        
+        .job-card {
+          border: 1px solid #e1e1e1;
+          border-radius: 8px;
+          padding: 20px;
+          background: white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .job-header {
+          margin-bottom: 15px;
+        }
+        
+        .job-title {
+          margin: 0 0 5px 0;
+          color: #2c3e50;
+          font-size: 1.4rem;
+        }
+        
+        .job-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+          color: #7f8c8d;
+          font-size: 0.9rem;
+        }
+        
+        .job-meta span {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+        
+        .toggle-description {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            padding: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .toggle-description:hover {
+            text-decoration: underline;
+        }
+
+        .job-description {
+            position: relative;
+            margin-bottom: 15px;
+            color: #34495e;
+            line-height: 1.6;
+            white-space: pre-line; /* Preserves line breaks from the API */
+        }
+        
+        .apply-btn {
+          display: inline-block;
+          padding: 8px 16px;
+          background: #3498db;
+          color: white;
+          text-decoration: none;
+          border-radius: 4px;
+          font-weight: 500;
+          transition: background 0.3s;
+        }
+        
+        .apply-btn:hover {
+          background: #2980b9;
+        }
+      </style>
+</head>
+<body>
+
+    {% verbatim %}
+    <div id="vue-app">
+      <h1>Remote Job Listings</h1>
+    
+      <!-- Search Input -->
+      <div class="search-container">
+        <input type="text" v-model="searchQuery" @input="filterJobs" placeholder="Search jobs...">
+      </div>
+      
+      <!-- Job Listings -->
+      <div class="job-list">
+        <div v-for="job in jobs" :key="job.id" class="job-card">
+          <div class="job-header">
+            <h2 class="job-title">{{ job.title }}</h2>
+            <div class="job-meta">
+              <span class="company">{{ job.company }}</span>
+              <span v-if="job.salary" class="salary">💰 {{ job.salary }}</span>
+              <span v-if="job.region" class="location">📍 {{ job.region }}</span>
+              <span v-if="job.posted_date" class="date">📅 {{ job.posted_date }}</span>
+            </div>
+          </div>
+          
+          <div class="job-description">
+            <p v-if="!job.showFullDescription">{{ truncateDescription(job.description) }}</p>
+            <p v-if="job.showFullDescription">{{ job.description }}</p>
+            <button 
+              v-if="job.description && job.description.length > 200"
+              @click="toggleDescription(job)"
+              class="toggle-description"
+            >
+              {{ job.showFullDescription ? 'Show less' : 'Show more...' }}
+            </button>
+          </div>
+          
+          <div class="job-actions">
+            <a v-if="job.url" :href="job.url" target="_blank" class="apply-btn">View Job</a>
+          </div>
+        </div>
+      </div>
+      
+      <p v-if="jobs.length === 0 && !apiStatus.loading">No jobs found</p>
+      <p v-if="apiStatus.loading">Loading jobs...</p>
+    </div>
+    {% endverbatim %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const app = Vue.createApp({
+            data() {
+              return {
+                searchQuery: "",
+                jobs: [],
+                allJobs: [],
+                apiStatus: {
+                  loading: false,
+                  error: false,
+                  message: "Ready"
+                }
+              };
+            },
+            methods: {
+              truncateDescription(desc) {
+                if (!desc) return 'No description available';
+                // Show first 200 characters with ellipsis if longer
+                return desc.length > 200 ? desc.substring(0, 200) + '...' : desc;
+              },
+              toggleDescription(job) {
+                // Add showFullDescription property if it doesn't exist
+                if (job.showFullDescription === undefined) {
+                Vue.set(job, 'showFullDescription', false);
+                }
+                job.showFullDescription = !job.showFullDescription;
+            },              
+              filterJobs() {
+                if (!this.searchQuery) {
+                  this.jobs = [...this.allJobs];
+                  return;
+                }
+                const query = this.searchQuery.toLowerCase();
+                this.jobs = this.allJobs.filter(job => 
+                  (job.title && job.title.toLowerCase().includes(query)) ||
+                  (job.company && job.company.toLowerCase().includes(query)) ||
+                  (job.description && job.description.toLowerCase().includes(query))
+                );
+              },
+              async fetchJobs() {
+                this.apiStatus.loading = true;
+                this.apiStatus.error = false;
+                this.apiStatus.message = "Loading jobs...";
+                
+                try {
+                    const response = await fetch("/api/jobs/?format=json");
+                    if (!response.ok) throw new Error("Failed to load jobs");
+                    
+                    const data = await response.json();
+                    
+                    // Modified line - adds showFullDescription while preserving everything else
+                    this.allJobs = (data.results || data).map(job => ({
+                    ...job,
+                    showFullDescription: false
+                    }));
+                    
+                    this.jobs = [...this.allJobs];
+                    this.apiStatus.message = `Loaded ${this.jobs.length} jobs`;
+                } catch (error) {
+                    console.error("Error:", error);
+                    this.apiStatus.error = true;
+                    this.apiStatus.message = "Error loading jobs";
+                } finally {
+                    this.apiStatus.loading = false;
+                }
+                }
+            },
+            mounted() {
+              this.fetchJobs();
+            }
+          });
+        
+          app.mount("#vue-app");
+        });
+        </script>
+</body>
+</html>
