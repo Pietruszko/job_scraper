@@ -16,3 +16,6 @@ __pycache__/
 
 # Ignore json files
 *.json
+
+# Ignore scraper log files
+scraper.log.txt
